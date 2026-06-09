@@ -1,15 +1,24 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
+from sklearn.linear_model import LogisticRegression
+from sklearn.preprocessing import StandardScaler
 
 @st.cache_resource
-def load_artifacts():
-    model  = joblib.load("logistic_regression_model.pkl")
-    scaler = joblib.load("scaler.pkl")
+def load_model():
+    df = pd.read_csv("diabetes.csv")
+    for col in ['Glucose','BloodPressure','SkinThickness','Insulin','BMI']:
+        df[col] = df[col].replace(0, np.nan)
+        df[col] = df[col].fillna(df[col].median())
+    X = df.drop('Outcome', axis=1)
+    y = df['Outcome']
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(X)
+    model = LogisticRegression(random_state=42, max_iter=1000, solver='liblinear')
+    model.fit(X_scaled, y)
     return model, scaler
 
-model, scaler = load_artifacts()
+model, scaler = load_model()
 
 st.set_page_config(page_title="Diabetes Prediction App", page_icon="🩺", layout="centered")
 st.title("🩺 Diabetes Prediction App")
